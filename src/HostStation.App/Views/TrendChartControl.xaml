@@ -1,0 +1,40 @@
+<UserControl x:Class="HostStation.App.Views.TrendChartControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MinHeight="200">
+  <Grid>
+    <Border Background="#FF0D1117" BorderBrush="#FF30363D" BorderThickness="1" CornerRadius="4">
+      <Grid Margin="8">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" Margin="0,0,0,6">
+          <TextBlock DockPanel.Dock="Left" Foreground="#FF8B949E" FontSize="12"
+                     Text="{Binding TagKey, StringFormat=趋势 / Trend — {0}}"/>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Foreground="#FF6E7681" FontSize="11" Margin="8,0,0,0"
+                       Text="{Binding MinY, StringFormat=Ymin {0:F1}}"/>
+            <TextBlock Foreground="#FF6E7681" FontSize="11" Margin="8,0,0,0"
+                       Text="{Binding MaxY, StringFormat=Ymax {0:F1}}"/>
+          </StackPanel>
+        </DockPanel>
+        <Canvas x:Name="PlotCanvas" Grid.Row="1" ClipToBounds="True"
+                SizeChanged="PlotCanvas_OnSizeChanged"
+                Background="#FF010409">
+          <!-- grid lines -->
+          <Line X1="0" Y1="0.25" X2="1" Y2="0.25" Stroke="#FF21262D" StrokeThickness="1"
+                Stretch="Fill" Width="{Binding ActualWidth, ElementName=PlotCanvas}"
+                Height="{Binding ActualHeight, ElementName=PlotCanvas}"/>
+          <Polyline x:Name="SeriesLine"
+                    Stroke="#FF3FB950"
+                    StrokeThickness="2"
+                    Points="{Binding Points}"/>
+        </Canvas>
+        <TextBlock Grid.Row="2" Margin="0,6,0,0" Foreground="#FF6E7681" FontSize="11"
+                   Text="Canvas / Polyline — 无第三方图表库"/>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

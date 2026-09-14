@@ -43,3 +43,21 @@ dotnet test HostStation.sln -c Release
 - 文档：`docs/backpressure.md`
 - 压测：`dotnet test --filter Backpressure`
 
+
+## 界面 (wayly)
+
+WPF MVVM 主窗口（深色工业风），绑定 Core 采集队列：
+
+| Tab | 功能 |
+|-----|------|
+| 设备 / Devices | 会话列表 + 点位最新值（`DispatcherTimer` 排空 `BoundedSampleQueue.TryRead`） |
+| 曲线 / Trends | 选中点位的 Canvas/`Polyline` 实时曲线（无第三方图表库） |
+| 告警 / Alarms | Quality=`Bad` 或越过 Hi/Lo 限时产生告警 |
+
+- ViewModels：`MainViewModel`、`TagValueViewModel`、`TrendSeriesViewModel`、`AlarmItemViewModel`
+- 演示：`ModbusAdapter` 仿真寄存器（`A.HR40001` 等），无需真实硬件；工具栏「启动采集 / 停止」
+- 构建：CI `wpf` job（`windows-latest`）编译 `HostStation.App`
+
+```bash
+dotnet build src/HostStation.App/HostStation.App.csproj -c Release
+```

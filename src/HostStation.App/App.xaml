@@ -2,5 +2,9 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="Views/MainWindow.xaml">
-  <Application.Resources />
+  <Application.Resources>
+    <!-- Dark industrial shell defaults (window-level styles also in MainWindow) -->
+    <SolidColorBrush x:Key="AppBackground" Color="#FF0D1117"/>
+    <SolidColorBrush x:Key="AppForeground" Color="#FFE6EDF3"/>
+  </Application.Resources>
 </Application>

@@ -1,18 +1,227 @@
 <Window x:Class="HostStation.App.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Host Station" Height="640" Width="960">
-  <DockPanel Margin="12">
-    <TextBlock DockPanel.Dock="Top" FontSize="20" FontWeight="SemiBold" Text="Host Station" Margin="0,0,0,12"/>
-    <TabControl>
-      <TabItem Header="Devices">
-        <TextBlock Margin="8" Text="Device / tag views (wayly) — protocol samples bind via queue."/>
+        xmlns:views="clr-namespace:HostStation.App.Views"
+        Title="Host Station — wayly"
+        Height="720" Width="1100"
+        MinHeight="560" MinWidth="880"
+        Background="#FF0D1117"
+        Foreground="#FFE6EDF3"
+        FontFamily="Segoe UI, Microsoft YaHei UI, sans-serif"
+        Closed="Window_OnClosed">
+  <Window.Resources>
+    <SolidColorBrush x:Key="PanelBrush" Color="#FF161B22"/>
+    <SolidColorBrush x:Key="BorderBrushKey" Color="#FF30363D"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF58A6FF"/>
+    <SolidColorBrush x:Key="GoodBrush" Color="#FF3FB950"/>
+    <SolidColorBrush x:Key="BadBrush" Color="#FFF85149"/>
+    <SolidColorBrush x:Key="WarnBrush" Color="#FFD29922"/>
+    <Style TargetType="Button">
+      <Setter Property="Padding" Value="12,6"/>
+      <Setter Property="Margin" Value="0,0,8,0"/>
+      <Setter Property="Background" Value="#FF21262D"/>
+      <Setter Property="Foreground" Value="#FFE6EDF3"/>
+      <Setter Property="BorderBrush" Value="#FF30363D"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="4" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="#FF30363D"/>
+              </Trigger>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style TargetType="TabItem">
+      <Setter Property="Foreground" Value="#FF8B949E"/>
+      <Setter Property="Padding" Value="14,8"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="TabItem">
+            <Border x:Name="TabBd" Background="Transparent" BorderThickness="0,0,0,2"
+                    BorderBrush="Transparent" Padding="{TemplateBinding Padding}" Margin="0,0,4,0">
+              <ContentPresenter ContentSource="Header" RecognizesAccessKey="True"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="TabBd" Property="BorderBrush" Value="#FF58A6FF"/>
+                <Setter Property="Foreground" Value="#FFE6EDF3"/>
+              </Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="#FFE6EDF3"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style TargetType="DataGrid">
+      <Setter Property="Background" Value="#FF0D1117"/>
+      <Setter Property="Foreground" Value="#FFE6EDF3"/>
+      <Setter Property="BorderBrush" Value="#FF30363D"/>
+      <Setter Property="RowBackground" Value="#FF0D1117"/>
+      <Setter Property="AlternatingRowBackground" Value="#FF161B22"/>
+      <Setter Property="HorizontalGridLinesBrush" Value="#FF21262D"/>
+      <Setter Property="VerticalGridLinesBrush" Value="#FF21262D"/>
+      <Setter Property="HeadersVisibility" Value="Column"/>
+      <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+      <Setter Property="AutoGenerateColumns" Value="False"/>
+      <Setter Property="CanUserAddRows" Value="False"/>
+      <Setter Property="IsReadOnly" Value="True"/>
+      <Setter Property="SelectionMode" Value="Single"/>
+    </Style>
+    <Style TargetType="DataGridColumnHeader">
+      <Setter Property="Background" Value="#FF161B22"/>
+      <Setter Property="Foreground" Value="#FF8B949E"/>
+      <Setter Property="Padding" Value="8,6"/>
+      <Setter Property="BorderBrush" Value="#FF30363D"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+    <Style TargetType="ComboBox">
+      <Setter Property="Background" Value="#FF21262D"/>
+      <Setter Property="Foreground" Value="#FFE6EDF3"/>
+      <Setter Property="BorderBrush" Value="#FF30363D"/>
+      <Setter Property="Padding" Value="8,4"/>
+    </Style>
+  </Window.Resources>
+
+  <DockPanel>
+    <!-- Toolbar -->
+    <Border DockPanel.Dock="Top" Background="{StaticResource PanelBrush}"
+            BorderBrush="{StaticResource BorderBrushKey}" BorderThickness="0,0,0,1" Padding="12,10">
+      <DockPanel>
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+          <TextBlock Text="HOST STATION" FontSize="16" FontWeight="SemiBold"
+                     Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+          <Button Content="▶ 启动采集 / Start" Command="{Binding StartCommand}"
+                  Background="#FF238636" BorderBrush="#FF2EA043"/>
+          <Button Content="■ 停止 / Stop" Command="{Binding StopCommand}"/>
+          <Button Content="清除告警 / Clear Alarms" Command="{Binding ClearAlarmsCommand}"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+          <TextBlock VerticalAlignment="Center" Margin="0,0,16,0" Foreground="#FF8B949E"
+                     Text="{Binding SamplesReceived, StringFormat=样品 Samples: {0}}"/>
+          <TextBlock VerticalAlignment="Center" Margin="0,0,16,0" Foreground="#FF8B949E"
+                     Text="{Binding QueueDropped, StringFormat=丢弃 Dropped: {0}}"/>
+          <Border CornerRadius="10" Padding="10,3" VerticalAlignment="Center">
+            <Border.Style>
+              <Style TargetType="Border">
+                <Setter Property="Background" Value="#FF21262D"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                    <Setter Property="Background" Value="#FF238636"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Border.Style>
+            <TextBlock FontSize="11" FontWeight="SemiBold">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Text" Value="STOPPED"/>
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                      <Setter Property="Text" Value="RUNNING"/>
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </Border>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- Status bar -->
+    <Border DockPanel.Dock="Bottom" Background="{StaticResource PanelBrush}"
+            BorderBrush="{StaticResource BorderBrushKey}" BorderThickness="0,1,0,0" Padding="12,6">
+      <TextBlock Text="{Binding StatusText}" Foreground="#FF8B949E" FontSize="12"/>
+    </Border>
+
+    <!-- Tabs -->
+    <TabControl Margin="12" Background="Transparent" BorderThickness="0" Padding="0">
+
+      <!-- Devices / Tags -->
+      <TabItem Header="设备 / Devices">
+        <Grid Margin="0,12,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+
+          <DockPanel Grid.Column="0">
+            <TextBlock DockPanel.Dock="Top" Text="采集会话 / Sessions" FontWeight="SemiBold"
+                       Foreground="#FF8B949E" Margin="0,0,0,8"/>
+            <DataGrid ItemsSource="{Binding Sessions}" HeadersVisibility="Column">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="名称 Name" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="状态" Binding="{Binding Status}" Width="70"/>
+                <DataGridTextColumn Header="Polls" Binding="{Binding PollCount}" Width="55"/>
+                <DataGridTextColumn Header="Err" Binding="{Binding ErrorCount}" Width="40"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </DockPanel>
+
+          <DockPanel Grid.Column="2">
+            <TextBlock DockPanel.Dock="Top" Text="点位实时值 / Tag values (from BoundedSampleQueue)"
+                       FontWeight="SemiBold" Foreground="#FF8B949E" Margin="0,0,0,8"/>
+            <DataGrid ItemsSource="{Binding Tags}">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="设备 Device" Binding="{Binding Device}" Width="120"/>
+                <DataGridTextColumn Header="点位 Tag" Binding="{Binding Tag}" Width="110"/>
+                <DataGridTextColumn Header="值 Value" Binding="{Binding Value, StringFormat=F2}" Width="80"/>
+                <DataGridTextColumn Header="质量 Quality" Binding="{Binding Quality}" Width="70"/>
+                <DataGridTextColumn Header="Hi" Binding="{Binding HiLimit, StringFormat=F0}" Width="45"/>
+                <DataGridTextColumn Header="Lo" Binding="{Binding LoLimit, StringFormat=F0}" Width="45"/>
+                <DataGridTextColumn Header="时间 Timestamp" Binding="{Binding Timestamp, StringFormat=HH:mm:ss.fff}" Width="*"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </DockPanel>
+        </Grid>
       </TabItem>
-      <TabItem Header="Trends">
-        <TextBlock Margin="8" Text="Realtime trends placeholder."/>
+
+      <!-- Trends -->
+      <TabItem Header="曲线 / Trends">
+        <DockPanel Margin="0,12,0,0">
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+            <TextBlock Text="选择点位 / Tag:" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#FF8B949E"/>
+            <ComboBox ItemsSource="{Binding TrendTagKeys}"
+                      SelectedItem="{Binding SelectedTrendTag, Mode=TwoWay}"
+                      MinWidth="240" HorizontalAlignment="Left"/>
+          </DockPanel>
+          <views:TrendChartControl DataContext="{Binding Trend}"/>
+        </DockPanel>
       </TabItem>
-      <TabItem Header="Alarms">
-        <TextBlock Margin="8" Text="Alarm list placeholder."/>
+
+      <!-- Alarms -->
+      <TabItem Header="告警 / Alarms">
+        <DockPanel Margin="0,12,0,0">
+          <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" Foreground="#FF8B949E"
+                     Text="质量 Bad 或越限 Hi/Lo 时产生告警；仿真 Diag 点位会偶发 Bad。"/>
+          <DataGrid ItemsSource="{Binding Alarms}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="时间" Binding="{Binding DisplayTime}" Width="100"/>
+              <DataGridTextColumn Header="级别" Binding="{Binding Severity}" Width="60"/>
+              <DataGridTextColumn Header="设备" Binding="{Binding Device}" Width="120"/>
+              <DataGridTextColumn Header="点位" Binding="{Binding Tag}" Width="100"/>
+              <DataGridTextColumn Header="消息 Message" Binding="{Binding Message}" Width="*"/>
+              <DataGridCheckBoxColumn Header="活动" Binding="{Binding IsActive}" Width="50"/>
+            </DataGrid.Columns>
+          </DataGrid>
+        </DockPanel>
       </TabItem>
     </TabControl>
   </DockPanel>
