@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Restore
+        run: dotnet restore HostStation.sln
+      - name: Test core + protocols
+        run: dotnet test tests/HostStation.Core.Tests/HostStation.Core.Tests.csproj -c Release --no-restore
+
+  wpf:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Build WPF app
+        run: dotnet build src/HostStation.App/HostStation.App.csproj -c Release
+      - name: Publish win-x64
+        run: dotnet publish src/HostStation.App/HostStation.App.csproj -c Release -r win-x64 --self-contained false -o artifacts/publish/app

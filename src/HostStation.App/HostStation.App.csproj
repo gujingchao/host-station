@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>HostStation.App</RootNamespace>
+    <AssemblyName>HostStation</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HostStation.Core\HostStation.Core.csproj" />
+    <ProjectReference Include="..\HostStation.Protocols\HostStation.Protocols.csproj" />
+  </ItemGroup>
+</Project>

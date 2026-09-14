@@ -22,3 +22,15 @@
 ## 状态
 
 仓库已创建，脚手架与业务代码由团队陆续推入。
+
+
+## 协议 / 采集（selyla）
+
+- `HostStation.Core/Acquisition`：`AcquisitionSession` / `AcquisitionHub`（多设备轮询 → 有界队列）
+- `HostStation.Core/Buffering`：背压策略 DropOldest / DropNewest / Block
+- `HostStation.Core/Reconnect`：指数退避重连
+- `HostStation.Protocols`：Serial / TCP 传输桩、Modbus 适配器、RTU CRC / TCP MBAP 组帧
+
+```bash
+dotnet test HostStation.sln -c Release
+```
