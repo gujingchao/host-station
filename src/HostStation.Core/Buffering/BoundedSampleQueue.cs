@@ -14,15 +14,18 @@ public sealed class BoundedSampleQueue
 {
     private readonly Channel<TagSample> _channel;
     private readonly OverflowPolicy _policy;
+    private readonly int _capacity;
     private long _dropped;
+    private long _enqueued;
 
     public BoundedSampleQueue(int capacity, OverflowPolicy policy = OverflowPolicy.DropOldest)
     {
         if (capacity < 1) throw new ArgumentOutOfRangeException(nameof(capacity));
+        _capacity = capacity;
         _policy = policy;
-        // DropNewest/Block use Wait so TryWrite fails when full; DropOldest uses channel policy.
-        var fullMode = policy == OverflowPolicy.DropOldest
-            ? BoundedChannelFullMode.DropOldest
+        // DropOldest is handled manually so Dropped is observable for backpressure metrics.
+        var fullMode = policy == OverflowPolicy.Block
+            ? BoundedChannelFullMode.Wait
             : BoundedChannelFullMode.Wait;
         _channel = Channel.CreateBounded<TagSample>(new BoundedChannelOptions(capacity)
         {
@@ -32,21 +35,58 @@ public sealed class BoundedSampleQueue
         });
     }
 
+    public int Capacity => _capacity;
+    public OverflowPolicy Policy => _policy;
     public long Dropped => Interlocked.Read(ref _dropped);
+    public long Enqueued => Interlocked.Read(ref _enqueued);
+    public int Count => _channel.Reader.Count;
 
     public ValueTask EnqueueAsync(TagSample sample, CancellationToken cancellationToken = default)
     {
-        if (_policy == OverflowPolicy.DropNewest)
+        return _policy switch
         {
-            if (!_channel.Writer.TryWrite(sample))
-                Interlocked.Increment(ref _dropped);
+            OverflowPolicy.DropNewest => EnqueueDropNewest(sample),
+            OverflowPolicy.DropOldest => EnqueueDropOldest(sample),
+            _ => EnqueueBlockAsync(sample, cancellationToken),
+        };
+    }
+
+    private ValueTask EnqueueDropNewest(TagSample sample)
+    {
+        if (_channel.Writer.TryWrite(sample))
+        {
+            Interlocked.Increment(ref _enqueued);
             return ValueTask.CompletedTask;
         }
 
-        if (_channel.Writer.TryWrite(sample))
-            return ValueTask.CompletedTask;
+        Interlocked.Increment(ref _dropped);
+        return ValueTask.CompletedTask;
+    }
 
-        return _channel.Writer.WriteAsync(sample, cancellationToken);
+    private ValueTask EnqueueDropOldest(TagSample sample)
+    {
+        while (!_channel.Writer.TryWrite(sample))
+        {
+            if (_channel.Reader.TryRead(out _))
+                Interlocked.Increment(ref _dropped);
+            else
+                Thread.SpinWait(4);
+        }
+
+        Interlocked.Increment(ref _enqueued);
+        return ValueTask.CompletedTask;
+    }
+
+    private async ValueTask EnqueueBlockAsync(TagSample sample, CancellationToken cancellationToken)
+    {
+        if (_channel.Writer.TryWrite(sample))
+        {
+            Interlocked.Increment(ref _enqueued);
+            return;
+        }
+
+        await _channel.Writer.WriteAsync(sample, cancellationToken).ConfigureAwait(false);
+        Interlocked.Increment(ref _enqueued);
     }
 
     public IAsyncEnumerable<TagSample> ReadAllAsync(CancellationToken cancellationToken = default)

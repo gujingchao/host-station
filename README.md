@@ -34,3 +34,12 @@
 ```bash
 dotnet test HostStation.sln -c Release
 ```
+
+## 背压 / 吞吐（him）
+
+- `BackpressureProfile`：RealtimeUi / ReliableAlarms / SoakDropNewest
+- `DeviceRateLimiter`：单设备令牌桶，防热设备饿死共享队列
+- `BoundedSampleQueue`：可观测 `Dropped` / `Enqueued`
+- 文档：`docs/backpressure.md`
+- 压测：`dotnet test --filter Backpressure`
+
